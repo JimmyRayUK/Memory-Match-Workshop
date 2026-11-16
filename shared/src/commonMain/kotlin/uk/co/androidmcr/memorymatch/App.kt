@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,6 +44,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,6 +58,20 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import memorymatch.shared.generated.resources.android_mcr_logo
+import memorymatch.shared.generated.resources.bug_logo
+import memorymatch.shared.generated.resources.card_back
+import memorymatch.shared.generated.resources.cmp_logo
+import memorymatch.shared.generated.resources.colour_logo
+import memorymatch.shared.generated.resources.firebase_logo
+import memorymatch.shared.generated.resources.gdg_logo
+import memorymatch.shared.generated.resources.gradle_logo
+import memorymatch.shared.generated.resources.kotlin_logo
+import memorymatch.shared.generated.resources.kotlin_meet_logo
+import memorymatch.shared.generated.resources.robot_logo
+import memorymatch.shared.generated.resources.Res
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Instant
 
 private val PlayerOneColor = Color(0xFFE7F4DF)
@@ -80,6 +101,18 @@ fun App() {
 
         Column(
             modifier = Modifier
+                .onPreviewKeyEvent { keyEvent ->
+                    if (
+                        uiState.screen == GameScreen.PLAYING &&
+                        keyEvent.type == KeyEventType.KeyUp &&
+                        keyEvent.key == Key.Escape
+                    ) {
+                        viewModel.dispatch(MemoryMatchIntent.BackRequested)
+                        true
+                    } else {
+                        false
+                    }
+                }
                 .background(backgroundColor)
                 .safeContentPadding()
                 .fillMaxSize()
@@ -340,6 +373,13 @@ private fun MemoryCardView(
 ) {
     val isMatchingCard = feedback == CardFeedback.MATCH && card.id in feedbackCardIds
     val isMismatchedCard = feedback == CardFeedback.MISMATCH && card.id in feedbackCardIds
+    val isFaceRevealed = card.isFaceUp || card.isMatched
+    val imageResource = if (isFaceRevealed) {
+        cardArtwork(card.label)
+    } else {
+        Res.drawable.card_back
+    }
+    val painter = painterResource(imageResource)
     val rotationY by animateFloatAsState(
         targetValue = if (card.isFaceUp || card.isMatched) 180f else 0f,
         animationSpec = tween(durationMillis = 300),
@@ -374,16 +414,42 @@ private fun MemoryCardView(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = if (rotationY > 90f) card.label else "?",
+                text = if (isFaceRevealed) card.label else "Face-down card",
                 modifier = Modifier.graphicsLayer {
                     if (rotationY > 90f) this.rotationY = 180f
                 },
+                color = if (isFaceRevealed) Color.DarkGray else Color.White,
                 textAlign = TextAlign.Center,
-                fontSize = 10.sp,
-                lineHeight = 12.sp,
+                fontSize = 9.sp,
+                lineHeight = 11.sp,
+                maxLines = 3,
+            )
+            Image(
+                painter = painter,
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        if (rotationY > 90f) this.rotationY = 180f
+                    },
             )
         }
     }
+}
+
+private fun cardArtwork(label: String): DrawableResource = when (label) {
+    "Android MCR" -> Res.drawable.android_mcr_logo
+    "Bug" -> Res.drawable.bug_logo
+    "Compose Multiplatform" -> Res.drawable.cmp_logo
+    "Colour" -> Res.drawable.colour_logo
+    "Firebase" -> Res.drawable.firebase_logo
+    "GDG" -> Res.drawable.gdg_logo
+    "Gradle" -> Res.drawable.gradle_logo
+    "Kotlin" -> Res.drawable.kotlin_logo
+    "Kotlin Meetup" -> Res.drawable.kotlin_meet_logo
+    "Robot" -> Res.drawable.robot_logo
+    else -> error("Unknown card label: $label")
 }
 
 @Composable
