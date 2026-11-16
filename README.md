@@ -38,7 +38,7 @@ Run the Wasm browser app:
 1. Trace how `androidApp` and `webApp` call `App()` in `shared/src/commonMain`.
 2. Read the common Compose imports and Gradle dependencies. The `androidx.compose.*` prefix does not mean that an API is Android-only.
 3. Focus each player name field on Android and in a desktop browser. Android can show a software keyboard. Browser users usually type with a hardware keyboard.
-4. Add one or two tech-card images to `androidApp/src/main/res/drawable`. Move them to `shared/src/commonMain/composeResources/drawable`.
+4. Move `kotlin_logo.png` and `gdg_logo.png` from `androidApp/src/main/res/drawable` to `shared/src/commonMain/composeResources/drawable`.
 5. Compare the browser time-zone ID with the solution branch. Add the npm package and module imports, then update both Yarn lockfiles.
 6. Add browser Escape support in the solution branch.
 
